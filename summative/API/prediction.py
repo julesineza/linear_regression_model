@@ -32,8 +32,8 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://linear-regression-model-w79d.onrender.com",   # <- replace with your Render URL
-        "http://localhost:8080",               # <- replace with your Flutter web debug port
+        "https://linear-regression-model-w79d.onrender.com",   
+        "http://localhost:8080",               
         "http://127.0.0.1:8080",
     ],
     allow_methods=["GET", "POST"],
