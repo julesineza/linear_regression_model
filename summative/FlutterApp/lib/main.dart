@@ -1,121 +1,281 @@
 import 'package:flutter/material.dart';
+import '../services/api_services.dart';
+import '../utilis/input_validator.dart';
+import '../widgets/health_indicator.dart';
+import '../widgets/prediction_display.dart';
+import '../data/crop_options.dart';
+import '../widgets/hybrid_dropdown_field.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const YieldPredictor());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class YieldPredictor extends StatelessWidget {
+  const YieldPredictor({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Yield Predictor',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        primarySwatch: Colors.green,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const PredictorScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class PredictorScreen extends StatefulWidget {
+  const PredictorScreen({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<PredictorScreen> createState() => _PredictorScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _PredictorScreenState extends State<PredictorScreen> {
+  final _countryController = TextEditingController();
+  final _productController = TextEditingController();
+  final _seasonController = TextEditingController();
+  final _systemController = TextEditingController();
+  final _areaController = TextEditingController();
+  final _yearController = TextEditingController();
+  final _plantingMonthController = TextEditingController();
+  final _harvestMonthController = TextEditingController();
 
-  void _incrementCounter() {
+  bool? _isApiOnline;
+  bool _isLoading = false;
+  String _displayMessage = '';
+  bool _isError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkApiHealth();
+  }
+
+  @override
+  void dispose() {
+    _countryController.dispose();
+    _productController.dispose();
+    _seasonController.dispose();
+    _systemController.dispose();
+    _areaController.dispose();
+    _yearController.dispose();
+    _plantingMonthController.dispose();
+    _harvestMonthController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkApiHealth() async {
+    setState(() => _isApiOnline = null);
+    final isOnline = await ApiService.checkHealth();
+    if (mounted) {
+      setState(() => _isApiOnline = isOnline);
+    }
+  }
+
+  Future<void> _handlePredict() async {
+    final ValidatedCropInput validInput;
+    try {
+      validInput = InputValidator.validate(
+        country: _countryController.text,
+        product: _productController.text,
+        seasonName: _seasonController.text,
+        productionSystem: _systemController.text,
+        areaText: _areaController.text,
+        yearText: _yearController.text,
+        plantingMonthText: _plantingMonthController.text,
+        harvestMonthText: _harvestMonthController.text,
+      );
+    } on FormatException catch (e) {
+      setState(() {
+        _isError = true;
+        _displayMessage = e.message;
+      });
+      return;
+    }
+
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _isLoading = true;
+      _isError = false;
+      _displayMessage = 'Requesting prediction from server...';
     });
+
+    try {
+      final result = await ApiService.predictYield(
+        country: validInput.country,
+        product: validInput.product,
+        seasonName: validInput.seasonName,
+        productionSystem: validInput.productionSystem,
+        area: validInput.area,
+        plantingYear: validInput.plantingYear,
+        plantingMonth: validInput.plantingMonth,
+        harvestMonth: validInput.harvestMonth,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isApiOnline = true;
+          _isError = false;
+          _displayMessage =
+              'Predicted Yield for ${validInput.product} in ${validInput.country}:\n$result tonnes per hectare';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isError = true;
+          _displayMessage = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Widget _buildNumberField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    bool decimal = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20.0),
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.numberWithOptions(decimal: decimal),
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          prefixIcon: Icon(icon),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: const Text('Yield Predictor'),
+        centerTitle: true,
+        actions: [
+          Center(
+            child: HealthIndicator(
+              isApiOnline: _isApiOnline,
+              onTap: _checkApiHealth,
+            ),
+          ),
+        ],
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                const Text(
+                  'Welcome to the Yield Predictor App!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 24),
+
+                // Hybrid Dropdown + Text Inputs
+                HybridDropdownField(
+                  controller: _countryController,
+                  options: CropOptions.countries,
+                  label: 'Country',
+                  hint: 'Select or type country e.g. Rwanda',
+                  icon: Icons.flag,
+                ),
+                HybridDropdownField(
+                  controller: _productController,
+                  options: CropOptions.products,
+                  label: 'Product',
+                  hint: 'Select or type product e.g. Maize, Rice',
+                  icon: Icons.agriculture,
+                ),
+                HybridDropdownField(
+                  controller: _seasonController,
+                  options: CropOptions.seasonNames,
+                  label: 'Season Name',
+                  hint: 'Select or type season e.g. Main, Season A',
+                  icon: Icons.calendar_today,
+                ),
+                HybridDropdownField(
+                  controller: _systemController,
+                  options: CropOptions.productionSystems,
+                  label: 'Crop Production System',
+                  hint: 'Select or type system e.g. All (PS)',
+                  icon: Icons.settings_suggest,
+                ),
+
+                // Numeric Inputs
+                _buildNumberField(
+                  controller: _areaController,
+                  label: 'Area',
+                  hint: 'Enter the area planted in hectares e.g. 4.0',
+                  icon: Icons.area_chart,
+                  decimal: true,
+                ),
+                _buildNumberField(
+                  controller: _yearController,
+                  label: 'Planting Year',
+                  hint: 'Enter the planting year e.g. 2023',
+                  icon: Icons.calendar_today,
+                ),
+                _buildNumberField(
+                  controller: _plantingMonthController,
+                  label: 'Planting Month',
+                  hint: 'Enter the planting month e.g. 1 for January',
+                  icon: Icons.calendar_today,
+                ),
+                _buildNumberField(
+                  controller: _harvestMonthController,
+                  label: 'Harvest Month',
+                  hint: 'Enter the harvest month e.g. 10',
+                  icon: Icons.calendar_today,
+                ),
+
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: 200,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _handlePredict,
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Predict', style: TextStyle(fontSize: 16)),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                PredictionDisplay(
+                  message: _displayMessage,
+                  isError: _isError,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
