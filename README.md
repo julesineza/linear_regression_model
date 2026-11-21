@@ -1,10 +1,10 @@
-Mission and Problem
+## Mission and Problem
 
 **Mission:** Improve food security across Sub-Saharan Africa by using my software engineering skills to build prediction tools that help agricultural decision makers plan better.
 **Problem:** Sub-Saharan Africa faces high food insecurity and a scarcity of reliable agricultural data, so planners often lack a quick estimate of how productive a crop will be before the season.
 **Solution:** This project predicts crop yield (tonnes per hectare) from the country, crop, season, production system, planted area and planting/harvest timing, and serves it through an API and a mobile app for extension officers and food-security planners.
 
-Dataset 
+## Dataset 
 
 **HarvestStat Africa** is an open-access collection of harmonized subnational crop statistics for Sub-Saharan Africa. It is built from agricultural statistics collected by USAID's Famine Early Warning Systems Network (FEWS NET), which were standardized and calibrated across changing administrative boundaries. The paper describes 574,204 records, mainly from 1980 to 2022, covering 33 countries and 94 crop types, with quantity produced, harvested area and yield.
 
@@ -20,19 +20,19 @@ so prediction for this countries might not be accurate or not possible using thi
 - Direct link to data with automatic download - https://datadryad.org/downloads/file_stream/4864223
 
 
-Swagger UI 
+## Swagger UI 
 
 https://linear-regression-model-w79d.onrender.com/docs
  
-Video Demo 
+## Video Demo 
 
 https://youtu.be/tYfdmQTcb1E
 
-Running the Mobile Application
+##Running the Mobile Application
 
 The mobile application is located in the summative/FlutterApp directory. The app can use the hosted prediction API, so the backend does not need to be started for a normal run. Or you can also run the API locally with uv.
 
-Requirements
+**Requirements**
 
 You need the following tools:
 
@@ -44,7 +44,7 @@ You need the following tools:
 
 On macOS, Xcode is required for iOS or macOS builds. Android Studio and the Android SDK are required for Android builds.
 
-Step 1: Get the project
+**Step 1: Get the project**
 
 Open a terminal and move into the project directory:
 
@@ -54,7 +54,7 @@ Verify that the Flutter application directory exists:
 
 ls summative/FlutterApp
 
-Step 2: Install and verify Flutter
+**Step 2: Install and verify Flutter**
 
 Install Flutter by following the official Flutter installation instructions for your operating system:
 
@@ -69,23 +69,23 @@ Resolve any errors reported for Android or iOS before continuing. You can also r
 
 For Android, enable USB debugging on a physical device or create an Android emulator from Android Studio. For iOS, open Xcode and accept the required licenses and component downloads, then start a simulator.
 
-Step 3: Open the Flutter application directory
+**Step 3: Open the Flutter application directory**
 
 cd summative/FlutterApp
 
-Step 4: Download Flutter dependencies
+**Step 4: Download Flutter dependencies**
 
 flutter pub get
 
 This reads pubspec.yaml and downloads packages used by the app.
 
-Step 5: Check available devices
+**Step 5: Check available devices**
 
 flutter devices
 
 For a physical device, connect it with a USB cable and confirm that it appears in this list. For an emulator or simulator, start it first and then run flutter devices again.
 
-Step 6: Run the application
+**Step 6: Run the application**
 
 Start the app on the selected device:
 
