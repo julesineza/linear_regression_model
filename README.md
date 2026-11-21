@@ -17,6 +17,7 @@ so prediction for this countries might not be accurate or not possible using thi
 
 - Paper: https://www.nature.com/articles/s41597-025-05001-z
 - Data: https://datadryad.org/dataset/doi:10.5061/dryad.vq83bk42w
+- Direct link to data with automatic download - https://datadryad.org/downloads/file_stream/4864223
 
 
 Swagger UI 
@@ -24,5 +25,7 @@ Swagger UI
 https://linear-regression-model-w79d.onrender.com/docs
  
 Video Demo 
+
+https://youtu.be/tYfdmQTcb1E
 
 
