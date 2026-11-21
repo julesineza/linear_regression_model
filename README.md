@@ -6,6 +6,7 @@
 
 **Mission:** Improve food security across Sub-Saharan Africa by using my software engineering skills to build prediction tools that help agricultural decision makers plan better.
 **Problem:** Sub-Saharan Africa faces high food insecurity and a scarcity of reliable agricultural data, so planners often lack a quick estimate of how productive a crop will be before the season.
+
 **Solution:** This project predicts crop yield (tonnes per hectare) from the country, crop, season, production system, planted area and planting/harvest timing, and serves it through an API and a mobile app for extension officers and food-security planners.
 
 ## Quick Links
