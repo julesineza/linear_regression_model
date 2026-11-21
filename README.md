@@ -36,7 +36,7 @@ The file I used (`hvstat_africa_data_v1_2.csv`) has 217,487 rows and 16 columns:
 - Data: https://datadryad.org/dataset/doi:10.5061/dryad.vq83bk42w
 - Direct link to data with automatic download - https://datadryad.org/downloads/file_stream/4864223
 
-## Hosted API
+## Swagger UI
 
 https://linear-regression-model-w79d.onrender.com/docs
  
